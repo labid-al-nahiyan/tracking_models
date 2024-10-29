@@ -70,22 +70,22 @@ def extract_image_patch(image, bbox, patch_shape):
 
 class ImageEncoder(object):
 
-    def __init__(self, checkpoint_filename, input_name="images",
-                 output_name="features"):
-        self.session = tf.Session()
-        with tf.gfile.GFile(checkpoint_filename, "rb") as file_handle:
-            graph_def = tf.GraphDef()
-            graph_def.ParseFromString(file_handle.read())
-        tf.import_graph_def(graph_def, name="net")
-        self.input_var = tf.get_default_graph().get_tensor_by_name(
-            "net/%s:0" % input_name)
-        self.output_var = tf.get_default_graph().get_tensor_by_name(
-            "net/%s:0" % output_name)
+    def __init__(self, checkpoint_filename, input_name="images", output_name="features"):
+        # Load the model using tf.saved_model.load() for TensorFlow 2.x
+        self.model = tf.saved_model.load(checkpoint_filename)
 
-        assert len(self.output_var.get_shape()) == 2
-        assert len(self.input_var.get_shape()) == 4
-        self.feature_dim = self.output_var.get_shape().as_list()[-1]
-        self.image_shape = self.input_var.get_shape().as_list()[1:]
+        # Assuming the model has a specific signature for input and output
+        # You may need to adjust this based on how your model is structured.
+        # For example, if the model has a serving signature:
+        self.input_var = self.model.signatures['serving_default'].inputs[0]  # Adjust index as needed
+        self.output_var = self.model.signatures['serving_default'].outputs[0]  # Adjust index as needed
+        
+        # You may need to validate the shapes of the input and output
+        assert len(self.output_var.shape) == 2
+        assert len(self.input_var.shape) == 4
+
+        self.feature_dim = self.output_var.shape[-1]
+        self.image_shape = self.input_var.shape[1:]
 
     def __call__(self, data_x, batch_size=32):
         out = np.zeros((len(data_x), self.feature_dim), np.float32)
