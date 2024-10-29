@@ -88,10 +88,16 @@ class ImageEncoder(object):
         self.image_shape = self.input_var.shape[1:]
 
     def __call__(self, data_x, batch_size=32):
+    # Allocate an output array with the correct shape
         out = np.zeros((len(data_x), self.feature_dim), np.float32)
-        _run_in_batches(
-            lambda x: self.session.run(self.output_var, feed_dict=x),
-            {self.input_var: data_x}, out, batch_size)
+
+        # Define a lambda function to process batches
+        def batch_fn(x):
+            return self.model(x, training=False)
+
+        # Use _run_in_batches to process data in batches
+        _run_in_batches(batch_fn, data_x, out, batch_size)
+        
         return out
 
 
