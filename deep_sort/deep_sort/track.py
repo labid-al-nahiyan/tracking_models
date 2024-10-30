@@ -114,7 +114,7 @@ class Track:
     def predict(self,pf):
         """Propagate the state distribution using the particle filter."""
         pf.predict()
-        self.mean, self.covariance = self.particle_filter.get_estimate()
+        self.mean, self.covariance = pf.get_estimate()
         self.age += 1
         self.time_since_update += 1
 
