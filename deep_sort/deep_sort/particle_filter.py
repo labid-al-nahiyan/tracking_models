@@ -1,4 +1,6 @@
 import numpy as np
+import scipy.linalg
+
 
 class ParticleFilter:
     def __init__(self, num_particles=100):
