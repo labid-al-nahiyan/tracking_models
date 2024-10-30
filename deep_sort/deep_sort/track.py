@@ -118,7 +118,7 @@ class Track:
         self.age += 1
         self.time_since_update += 1
 
-    def update(self, detection):
+    def update(self,pf, detection):
         """Perform particle filter measurement update step and update the feature
         cache.
 
@@ -127,9 +127,9 @@ class Track:
         detection : Detection
             The associated detection.
         """
-        self.particle_filter.update(detection.to_xyah())
+        pf.update(detection.to_xyah())
         self.features.append(detection.feature)
-
+        self.mean, self.covariance = pf.get_estimate()
         self.hits += 1
         self.time_since_update = 0
         if self.state == TrackState.Tentative and self.hits >= self._n_init:
