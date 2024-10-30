@@ -105,7 +105,8 @@ class ImageEncoder(object):
 
         # Define a lambda function to process batches
         def batch_fn(x):
-            return self.model(x, training=False)
+            return self.session.run(self.output_var, feed_dict={self.input_var: x["images"]})
+
 
         # Use _run_in_batches to process data in batches
         _run_in_batches(batch_fn, data_dict, out, batch_size)
@@ -114,7 +115,6 @@ class ImageEncoder(object):
 
        
        
-
 def create_box_encoder(model_filename, input_name="images",
                        output_name="features", batch_size=32):
     image_encoder = ImageEncoder(model_filename, input_name, output_name)
