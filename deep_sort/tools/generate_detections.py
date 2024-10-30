@@ -91,6 +91,10 @@ class ImageEncoder(object):
         assert self.input_var.shape.ndims == 4, "Expected input to be 4D (batch, height, width, channels)"
         assert self.output_var.shape.ndims == 2, "Expected output to be 2D (batch, feature_dim)"
         self.image_shape = self.input_var.shape.as_list()[1:3]  # Height and Width
+        self.feature_dim = self.output_var.shape[-1]  # Assume last dimension is the feature dimension
+        if self.feature_dim is None:
+            raise ValueError("Could not determine feature dimension from the model output.")
+
 
 
     def __call__(self, data_x, batch_size=32):
