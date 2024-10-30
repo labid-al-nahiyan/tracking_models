@@ -72,13 +72,15 @@ class ImageEncoder(object):
 
     def __init__(self, checkpoint_filename, input_name="images", output_name="features"):
         # Load the model using tf.saved_model.load() for TensorFlow 2.x
-        self.model = tf.saved_model.load(checkpoint_filename)
-
-        # Assuming the model has a specific signature for input and output
-        # You may need to adjust this based on how your model is structured.
-        # For example, if the model has a serving signature:
-        self.input_var = self.model.signatures['serving_default'].inputs[0]  # Adjust index as needed
-        self.output_var = self.model.signatures['serving_default'].outputs[0]  # Adjust index as needed
+        self.graph = tf.compat.v1.Graph()
+        with self.graph.as_default():
+            graph_def = tf.compat.v1.GraphDef()
+            with tf.io.gfile.GFile(checkpoint_filename, "rb") as f:
+                graph_def.ParseFromString(f.read())
+                tf.import_graph_def(graph_def, name="")
+        
+        # Start a TensorFlow 1.x session in compatibility mode
+        self.session = tf.compat.v1.Session(graph=self.graph)
         
         # You may need to validate the shapes of the input and output
         assert len(self.output_var.shape) == 2
