@@ -72,22 +72,25 @@ class ImageEncoder(object):
 
     def __init__(self, checkpoint_filename, input_name="images", output_name="features"):
         # Load the model using tf.saved_model.load() for TensorFlow 2.x
+        # Use compatibility mode for TensorFlow 1.x
         self.graph = tf.compat.v1.Graph()
         with self.graph.as_default():
             graph_def = tf.compat.v1.GraphDef()
-            with tf.io.gfile.GFile(checkpoint_filename, "rb") as f:
+            with tf.io.gfile.GFile(model_filename, "rb") as f:
                 graph_def.ParseFromString(f.read())
                 tf.import_graph_def(graph_def, name="")
         
         # Start a TensorFlow 1.x session in compatibility mode
         self.session = tf.compat.v1.Session(graph=self.graph)
         
-        # You may need to validate the shapes of the input and output
-        assert len(self.output_var.shape) == 2
-        assert len(self.input_var.shape) == 4
+        # Retrieve input and output tensors by their names
+        self.input_var = self.graph.get_tensor_by_name("images:0")
+        self.output_var = self.graph.get_tensor_by_name("features:0")
+        
+        # Check tensor shapes (ensure compatibility)
+        assert self.input_var.shape.ndims == 4, "Expected input to be 4D (batch, height, width, channels)"
+        assert self.output_var.shape.ndims == 2, "Expected output to be 2D (batch, feature_dim)"
 
-        self.feature_dim = self.output_var.shape[-1]
-        self.image_shape = self.input_var.shape[1:]
 
     def __call__(self, data_x, batch_size=32):
     # Allocate an output array with the correct shape
