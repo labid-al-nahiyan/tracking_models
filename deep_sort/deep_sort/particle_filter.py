@@ -80,17 +80,8 @@ class ParticleFilter:
             estimate.
 
         """
-        std = [
-            self._std_weight_position * mean[3],
-            self._std_weight_position * mean[3],
-            1e-1,
-            self._std_weight_position * mean[3]]
-        innovation_cov = np.diag(np.square(std))
-
-        mean = np.dot(self._update_mat, mean)
-        covariance = np.linalg.multi_dot((
-            self._update_mat, covariance, self._update_mat.T))
-        return mean, covariance + innovation_cov
+        
+        return mean, covariance 
 
 
     def gating_distance(self, mean, covariance, measurements,
