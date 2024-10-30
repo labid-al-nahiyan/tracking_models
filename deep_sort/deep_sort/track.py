@@ -82,7 +82,7 @@ class Track:
         self._max_age = max_age
 
         # Initialize particle filter
-        self.particle_filter = ParticleFilter(mean, covariance)
+        #self.particle_filter = ParticleFilter(mean, covariance)
 
     def to_tlwh(self):
         """Get current position in bounding box format `(top left x, top left y,
