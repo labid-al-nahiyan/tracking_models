@@ -11,6 +11,11 @@ class ParticleFilter:
         self.particles = np.random.normal(state, scale=0.5, size=(self.num_particles, len(state)))
         self.weights = np.ones(self.num_particles) / self.num_particles
 
+        # Return the initial mean and covariance
+        mean = np.mean(self.particles, axis=0)
+        covariance = np.cov(self.particles, rowvar=False)
+        return mean, covariance
+
     def predict(self):
         """Predict the next state for each particle."""
         # Implement the prediction step
