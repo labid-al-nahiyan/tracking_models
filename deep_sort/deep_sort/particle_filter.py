@@ -43,3 +43,22 @@ class ParticleFilter:
         indices = np.random.choice(range(self.num_particles), size=self.num_particles, p=self.weights)
         self.particles = self.particles[indices]
         self.weights.fill(1.0 / self.num_particles)  # Reset weights after resampling
+
+    def update(self, measurement):
+        """Update weights based on the measurement and resample particles."""
+        # Calculate weights based on likelihood (e.g., Gaussian likelihood)
+        distances = np.linalg.norm(self.particles - measurement, axis=1)
+        self.weights = np.exp(-0.5 * (distances ** 2))  # Example: Gaussian likelihood
+        self.weights += 1.e-300  # Avoid division by zero
+        self.weights /= np.sum(self.weights)  # Normalize weights
+
+        # Resampling step
+        indices = np.random.choice(np.arange(self.num_particles), size=self.num_particles, p=self.weights)
+        self.particles = self.particles[indices]
+        self.weights.fill(1.0 / self.num_particles)  # Reset weights
+
+    def get_estimate(self):
+        """Return the weighted mean and covariance of the particles."""
+        mean = np.average(self.particles, weights=self.weights, axis=0)
+        covariance = np.cov(self.particles, rowvar=False)
+        return mean, covariance
