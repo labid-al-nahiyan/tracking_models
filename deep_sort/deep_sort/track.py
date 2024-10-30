@@ -111,7 +111,7 @@ class Track:
         ret[2:] = ret[:2] + ret[2:]
         return ret
 
-    def predict(self):
+    def predict(self,pf):
         """Propagate the state distribution using the particle filter."""
         self.particle_filter.predict()
         self.mean, self.covariance = self.particle_filter.get_estimate()
