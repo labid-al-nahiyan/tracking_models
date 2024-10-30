@@ -99,6 +99,8 @@ class ImageEncoder(object):
 
     def __call__(self, data_x, batch_size=32):
     # Allocate an output array with the correct shape
+
+        data_dict = {"images": data_x}
         out = np.zeros((len(data_x), self.feature_dim), np.float32)
 
         # Define a lambda function to process batches
@@ -106,10 +108,12 @@ class ImageEncoder(object):
             return self.model(x, training=False)
 
         # Use _run_in_batches to process data in batches
-        _run_in_batches(batch_fn, data_x, out, batch_size)
+        _run_in_batches(batch_fn, data_dict, out, batch_size)
         
         return out
 
+       
+       
 
 def create_box_encoder(model_filename, input_name="images",
                        output_name="features", batch_size=32):
