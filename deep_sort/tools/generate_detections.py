@@ -76,7 +76,7 @@ class ImageEncoder(object):
         self.graph = tf.compat.v1.Graph()
         with self.graph.as_default():
             graph_def = tf.compat.v1.GraphDef()
-            with tf.io.gfile.GFile(model_filename, "rb") as f:
+            with tf.io.gfile.GFile(checkpoint_filename, "rb") as f:
                 graph_def.ParseFromString(f.read())
                 tf.import_graph_def(graph_def, name="")
         
