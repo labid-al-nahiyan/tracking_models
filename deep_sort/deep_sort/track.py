@@ -1,4 +1,4 @@
-import numpy as np
+# vim: expandtab:ts=4:sw=4
 
 
 class TrackState:
@@ -20,7 +20,7 @@ class Track:
     """
     A single target track with state space `(x, y, a, h)` and associated
     velocities, where `(x, y)` is the center of the bounding box, `a` is the
-    aspect ratio, and `h` is the height.
+    aspect ratio and `h` is the height.
 
     Parameters
     ----------
@@ -52,20 +52,19 @@ class Track:
     hits : int
         Total number of measurement updates.
     age : int
-        Total number of frames since the first occurrence.
+        Total number of frames since first occurance.
     time_since_update : int
-        Total number of frames since the last measurement update.
+        Total number of frames since last measurement update.
     state : TrackState
         The current track state.
     features : List[ndarray]
         A cache of features. On each measurement update, the associated feature
         vector is added to this list.
-    particle_filter : ParticleFilter
-        The particle filter used for tracking.
 
     """
 
-    def __init__(self, mean, covariance, track_id, n_init, max_age, feature=None):
+    def __init__(self, mean, covariance, track_id, n_init, max_age,
+                 feature=None):
         self.mean = mean
         self.covariance = covariance
         self.track_id = track_id
@@ -81,9 +80,6 @@ class Track:
         self._n_init = n_init
         self._max_age = max_age
 
-        # Initialize particle filter
-        #self.particle_filter = ParticleFilter(mean, covariance)
-
     def to_tlwh(self):
         """Get current position in bounding box format `(top left x, top left y,
         width, height)`.
@@ -92,6 +88,7 @@ class Track:
         -------
         ndarray
             The bounding box.
+
         """
         ret = self.mean[:4].copy()
         ret[2] *= ret[3]
@@ -99,51 +96,65 @@ class Track:
         return ret
 
     def to_tlbr(self):
-        """Get current position in bounding box format `(min x, min y, max x,
+        """Get current position in bounding box format `(min x, miny, max x,
         max y)`.
 
         Returns
         -------
         ndarray
             The bounding box.
+
         """
         ret = self.to_tlwh()
         ret[2:] = ret[:2] + ret[2:]
         return ret
 
-    def predict(self,pf):
-        """Propagate the state distribution using the particle filter."""
-        pf.predict()
-        self.mean, self.covariance = pf.get_estimate()
+    def predict(self, kf):
+        """Propagate the state distribution to the current time step using a
+        Kalman filter prediction step.
+
+        Parameters
+        ----------
+        kf : kalman_filter.KalmanFilter
+            The Kalman filter.
+
+        """
+        self.mean, self.covariance = kf.predict(self.mean, self.covariance)
         self.age += 1
         self.time_since_update += 1
 
-    def update(self,pf, detection):
-        """Perform particle filter measurement update step and update the feature
+    def update(self, kf, detection):
+        """Perform Kalman filter measurement update step and update the feature
         cache.
 
         Parameters
         ----------
+        kf : kalman_filter.KalmanFilter
+            The Kalman filter.
         detection : Detection
             The associated detection.
+
         """
-        pf.update(detection.to_xyah())
+        self.mean, self.covariance = kf.update(
+            self.mean, self.covariance, detection.to_xyah())
         self.features.append(detection.feature)
-        self.mean, self.covariance = pf.get_estimate()
+
         self.hits += 1
         self.time_since_update = 0
         if self.state == TrackState.Tentative and self.hits >= self._n_init:
             self.state = TrackState.Confirmed
 
     def mark_missed(self):
-        """Mark this track as missed (no association at the current time step)."""
+        """Mark this track as missed (no association at the current time step).
+        """
         if self.state == TrackState.Tentative:
             self.state = TrackState.Deleted
         elif self.time_since_update > self._max_age:
             self.state = TrackState.Deleted
 
     def is_tentative(self):
-        """Returns True if this track is tentative (unconfirmed)."""
+        """Returns True if this track is tentative (unconfirmed).
+        """
         return self.state == TrackState.Tentative
 
     def is_confirmed(self):
